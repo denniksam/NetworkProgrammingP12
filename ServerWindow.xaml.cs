@@ -120,6 +120,7 @@ namespace NetworkProgrammingP12
                     ClientRequest? clientRequest = null;
                     try { clientRequest = JsonSerializer.Deserialize<ClientRequest>(str); }
                     catch { }
+                    bool needLog = true;
                     if (clientRequest == null)
                     {
                         str = "Error decoding JSON: " + str;
@@ -146,10 +147,13 @@ namespace NetworkProgrammingP12
                             serverResponse.Status = "200 OK";
                             serverResponse.Messages =
                                 messages.Where(m => m.Moment > clientRequest.Message.Moment);
+                            needLog = false;
                         }
                     }
-                    Dispatcher.Invoke(() => ServerLog.Text += $"{DateTime.Now} {str}\n");
-                    
+                    if (needLog)
+                    {
+                        Dispatcher.Invoke(() => ServerLog.Text += $"{DateTime.Now} {str}\n");
+                    }
                     // Сервер готує відповідь і надсилає клієнту
                     socket.Send(Encoding.UTF8.GetBytes(
                         JsonSerializer.Serialize(serverResponse)

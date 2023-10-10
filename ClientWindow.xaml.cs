@@ -27,6 +27,7 @@ namespace NetworkProgrammingP12
         private Random random = new();
         private IPEndPoint? endPoint;
         private DateTime lastSyncMoment;
+        private bool isServerOn;
 
         public ClientWindow()
         {
@@ -38,6 +39,8 @@ namespace NetworkProgrammingP12
         {
             LoginTextBox.Text = "User" + random.Next(100);
             MessageTextBox.Text = "Hello, all!";
+            isServerOn = true;
+            Sync();
         }
 
         private void SendButton_Click(object sender, RoutedEventArgs e)
@@ -67,30 +70,35 @@ namespace NetworkProgrammingP12
             }
         }
 
-        private void SyncButton_Click(object sender, RoutedEventArgs e)
+        private async void Sync()
         {
-            String[] address = HostTextBox.Text.Split(':');
-            try
+            if (isServerOn)
             {
-                endPoint = new(
-                    IPAddress.Parse(address[0]),
-                    Convert.ToInt32(address[1]));
+                String[] address = HostTextBox.Text.Split(':');
+                try
+                {
+                    endPoint = new(
+                        IPAddress.Parse(address[0]),
+                        Convert.ToInt32(address[1]));
 
-                new Thread(SendMessage).Start(
-                    new ClientRequest
-                    {
-                        Command = "Check",
-                        Message = new()
+                    new Thread(SendMessage).Start(
+                        new ClientRequest
                         {
-                            Moment = lastSyncMoment
+                            Command = "Check",
+                            Message = new()
+                            {
+                                Moment = lastSyncMoment
+                            }
                         }
-                    }
-                );
+                    );
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            await Task.Delay(1000);
+            Sync();
         }
 
         private void SendMessage(Object? arg)
@@ -107,6 +115,7 @@ namespace NetworkProgrammingP12
             try
             {
                 clientSocket.Connect(endPoint);   // клієнт "викликає" (сервер слухає)
+                // isServerOn = true;
                 clientSocket.Send(
                     Encoding.UTF8.GetBytes(
                        JsonSerializer.Serialize(clientRequest)
@@ -137,7 +146,7 @@ namespace NetworkProgrammingP12
                         foreach( var message in response.Messages )
                         {
                             str += message + "\n";
-                            // та оновлюємо момент синхронізації
+                            // та оновлюємо момент синхронізації (шукаємо максимальний)
                             if(message.Moment > lastSyncMoment)
                             {
                                 lastSyncMoment = message.Moment;
@@ -146,7 +155,7 @@ namespace NetworkProgrammingP12
                     }
                 }
                 // Виводимо відповідь на лог
-                Dispatcher.Invoke(() => ClientLog.Text += str + "\n");
+                Dispatcher.Invoke(() => ClientLog.Text += str);
                 // Повідомляємо сервер про розрив сокету
                 clientSocket.Shutdown(SocketShutdown.Both);
                 // Звільняємо ресурс
@@ -154,15 +163,20 @@ namespace NetworkProgrammingP12
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                if (isServerOn)  // клієнт намагається підключитись тричі
+                {  // і тричі виводить повідомлення. Реагуємо тільки на перше
+                    isServerOn = false;
+                    clientSocket.Dispose();
+                    MessageBox.Show(ex.Message);
+                    isServerOn = true;
+                }
             }
-
         }
     }
 }
-/* Д.З. Реалізувати відображення статусу серверної відповіді
- * на клієнті при надсиланні повідомлення
- * - при успішному статусі: зелений фон + "надіслано"
- * - при помилці: червоний фон + "помилка"
- * ** прибирати це повідомлення через 3 секунди після показу
+/* Д.З. Реалізувати відображення часу повідомлення на клієнті
+ * ** у "розумному" стилі: якщо у межах поточної дати, то 
+ * писати "сьогодні" та час. Якщо старші за день,
+ * то ще й додавати дату. При зміні дати оновлювати відображення
+ * Створити Гугл-акаунт, встановити двофакторну перевірку.
  */
