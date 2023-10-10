@@ -124,17 +124,29 @@ namespace NetworkProgrammingP12
                     {
                         str = "Error decoding JSON: " + str;
                         serverResponse.Status = "400 Bad request";
-                        serverResponse.Data = "Error decoding JSON";
+                        // serverResponse.Data = "Error decoding JSON";
                     }
-                    else
+                    else  // запит декодований, визначаємо команду запиту
                     {
-                        // час встановлюємо на сервері
-                        clientRequest.Message.Moment = DateTime.Now;
-                        // додаємо до колекції
-
-                        str = clientRequest.Message.ToString();
-                        serverResponse.Status = "200 OK";
-                        serverResponse.Data = "Received " + DateTime.Now;
+                        if (clientRequest.Command.Equals("Message"))
+                        {
+                            // час встановлюємо на сервері
+                            clientRequest.Message.Moment = DateTime.Now;
+                            // додаємо до колекції
+                            messages.AddLast(clientRequest.Message);
+                            // логуємо
+                            str = clientRequest.Message.ToString();
+                            serverResponse.Status = "200 OK";
+                            // serverResponse.Data = "Received " + clientRequest.Message.Moment;
+                        }
+                        else if (clientRequest.Command.Equals("Check"))
+                        {
+                            // визначаємо момент останньої синхронізації
+                            // та надсилаємо у відповідь всі повідомлення, пізніші цього моменту
+                            serverResponse.Status = "200 OK";
+                            serverResponse.Messages =
+                                messages.Where(m => m.Moment > clientRequest.Message.Moment);
+                        }
                     }
                     Dispatcher.Invoke(() => ServerLog.Text += $"{DateTime.Now} {str}\n");
                     

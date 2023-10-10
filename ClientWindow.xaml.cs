@@ -26,10 +26,12 @@ namespace NetworkProgrammingP12
     {
         private Random random = new();
         private IPEndPoint? endPoint;
+        private DateTime lastSyncMoment;
 
         public ClientWindow()
         {
             InitializeComponent();
+            lastSyncMoment = default;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -64,6 +66,33 @@ namespace NetworkProgrammingP12
                 MessageBox.Show(ex.Message);
             }
         }
+
+        private void SyncButton_Click(object sender, RoutedEventArgs e)
+        {
+            String[] address = HostTextBox.Text.Split(':');
+            try
+            {
+                endPoint = new(
+                    IPAddress.Parse(address[0]),
+                    Convert.ToInt32(address[1]));
+
+                new Thread(SendMessage).Start(
+                    new ClientRequest
+                    {
+                        Command = "Check",
+                        Message = new()
+                        {
+                            Moment = lastSyncMoment
+                        }
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
         private void SendMessage(Object? arg)
         {
             var clientRequest = arg as ClientRequest;
@@ -101,7 +130,20 @@ namespace NetworkProgrammingP12
                 }
                 else
                 {
-                    str = response.Status;
+                    str = "";
+                    // якщо у відповіді є нові повідомлення - виводимо їх
+                    if(response.Messages != null)
+                    {
+                        foreach( var message in response.Messages )
+                        {
+                            str += message + "\n";
+                            // та оновлюємо момент синхронізації
+                            if(message.Moment > lastSyncMoment)
+                            {
+                                lastSyncMoment = message.Moment;
+                            }
+                        }
+                    }
                 }
                 // Виводимо відповідь на лог
                 Dispatcher.Invoke(() => ClientLog.Text += str + "\n");
