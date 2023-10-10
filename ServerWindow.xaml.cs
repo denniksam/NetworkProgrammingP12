@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -24,10 +26,12 @@ namespace NetworkProgrammingP12
     {
         private Socket? listenSocket;  // "слухаючий" сокет - очікує запитів
         private IPEndPoint? endPoint;  // точка, як він "слухає" 
+        private LinkedList<ChatMessage> messages;
 
         public ServerWindow()
         {
             InitializeComponent();
+            messages = new();
         }
 
         private void SwitchServer_Click(object sender, RoutedEventArgs e)
@@ -65,10 +69,6 @@ namespace NetworkProgrammingP12
                 // це призведе до exception у потоці сервера 
             }
         }
-        /* Д.З. Реалізувати реакцію UI на перемикання стану сервера -
-         * змінювати надпис та колір статусу, надпис (опціонально-колір)
-         * кнопки запуску/зупинки серверу.
-         */
 
         private void StartServer()
         {
@@ -91,6 +91,11 @@ namespace NetworkProgrammingP12
                     Socket socket = listenSocket.Accept();
 
                     // цей код виконується коли сервер отримав запит
+                    /* // небажано - збирати рядки з фрагментів байт-послідовності,
+                     * оскільки різні символи мають різну байтову довжину і фрагмент
+                     * може містити неповний символ (через обмеженість буфера)
+                     * Також у JSON деякі символи кодуються типу \u2311, які теж
+                     * не бажано розривати
                     StringBuilder stringBuilder = new();
                     do
                     {
@@ -102,7 +107,43 @@ namespace NetworkProgrammingP12
 
                     } while (socket.Available > 0);   // повторюємо цикл доки у сокеті є дані
                     String str = stringBuilder.ToString();
+                    */
+                    MemoryStream memoryStream = new();   // "ByteBuilder" - спосіб накопичити байти
+                    do
+                    {
+                        int n = socket.Receive(buffer);
+                        memoryStream.Write(buffer, 0, n);
+                    } while (socket.Available > 0);
+                    String str = Encoding.UTF8.GetString(memoryStream.ToArray());
+                    // декодуємо з JSON, знаючи, що це ClientRequest
+                    ServerResponse serverResponse = new();
+                    ClientRequest? clientRequest = null;
+                    try { clientRequest = JsonSerializer.Deserialize<ClientRequest>(str); }
+                    catch { }
+                    if (clientRequest == null)
+                    {
+                        str = "Error decoding JSON: " + str;
+                        serverResponse.Status = "400 Bad request";
+                        serverResponse.Data = "Error decoding JSON";
+                    }
+                    else
+                    {
+                        // час встановлюємо на сервері
+                        clientRequest.Message.Moment = DateTime.Now;
+                        // додаємо до колекції
+
+                        str = clientRequest.Message.ToString();
+                        serverResponse.Status = "200 OK";
+                        serverResponse.Data = "Received " + DateTime.Now;
+                    }
                     Dispatcher.Invoke(() => ServerLog.Text += $"{DateTime.Now} {str}\n");
+                    
+                    // Сервер готує відповідь і надсилає клієнту
+                    socket.Send(Encoding.UTF8.GetBytes(
+                        JsonSerializer.Serialize(serverResponse)
+                    ));
+
+                    socket.Close();
                 }
             }
             catch (Exception ex)
@@ -121,3 +162,20 @@ namespace NetworkProgrammingP12
         }
     }
 }
+/* Т.З. Реалізувати обмін повідомленнями:
+ * клієнти періодично надсилають на сервер запити на оновлення
+ * повідомлень, якщо такі є, то сервер надсилає масив нових даних,
+ * інакше - "порожню" відповідь
+ * Самі повідомлення надсилаються окремими видом запитів.
+ * клієнт 1        сервер       клієнт 3         
+ * Вітання ----->         <---- check   
+ *                        --> [ клієнт 1:Вітання, клієнт 2:Hello ] 
+ * клієнт 2       
+ * Hello  -----> 
+ * 
+ * Розгляд:
+ * Як серверу вирішувати, кому і що передавати
+ * а) все на сервері - погано для великої кількості користувачів
+ * б) кожен клієнт сам передає дані про останню синхронізацію
+ * У якості "мітки" синхронізації будемо використовувати час
+ */

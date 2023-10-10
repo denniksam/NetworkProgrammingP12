@@ -29,5 +29,10 @@ namespace NetworkProgrammingP12
         {
             new ServerWindow().Show();
         }
+
+        private void ClientButton_Click(object sender, RoutedEventArgs e)
+        {
+            new ClientWindow().Show();
+        }
     }
 }
