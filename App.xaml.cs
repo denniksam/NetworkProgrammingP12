@@ -54,5 +54,7 @@ namespace NetworkProgrammingP12
 
             return jsonElement?.GetString();
         }
+
+        public static String Host => GetConfiguration("smtp:host") ?? "--";
     }
 }

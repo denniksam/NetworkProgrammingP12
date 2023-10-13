@@ -26,70 +26,93 @@ namespace NetworkProgrammingP12
             InitializeComponent();
         }
 
-        private void SendButton1_Click(object sender, RoutedEventArgs e)
+        private SmtpClient? GetSmtpClient()
         {
             #region get and check config
             String? host = App.GetConfiguration("smtp:host");
             if(host == null)
             {
                 MessageBox.Show("Error getting host");
-                return;
+                return null;
             }
             String? portString = App.GetConfiguration("smtp:port");
             if (portString == null)
             {
                 MessageBox.Show("Error getting port");
-                return;
+                return null;
             }
             int port;
             try { port = int.Parse(portString); }
             catch {
                 MessageBox.Show("Error parsing port");
-                return;
+                return null;
             }
             String? email = App.GetConfiguration("smtp:email");
             if (email == null)
             {
                 MessageBox.Show("Error getting email");
-                return;
+                return null;
             }
             String? password = App.GetConfiguration("smtp:password");
             if (password == null)
             {
                 MessageBox.Show("Error getting password");
-                return;
+                return null;
             }
             String? sslString = App.GetConfiguration("smtp:ssl");
             if (sslString == null)
             {
                 MessageBox.Show("Error getting ssl");
-                return;
+                return null;
             }
             bool ssl;
             try { ssl = bool.Parse(sslString); }
             catch
             {
                 MessageBox.Show("Error parsing ssl");
-                return;
+                return null;
             }
             #endregion
 
             if( ! textBoxTo.Text.Contains('@'))
             {
                 MessageBox.Show("Введіть правильну адресу");
-                return;
+                return null;
             }
-            using SmtpClient smtpClient = new(host, port)
+            return new(host, port)
             {
                 EnableSsl = ssl,
                 Credentials = new NetworkCredential(email, password)
             };
+        }
+
+        private void SendButton1_Click(object sender, RoutedEventArgs e)
+        {
+            SmtpClient? smtpClient = GetSmtpClient();
+            if (smtpClient == null) { return; }
             smtpClient.Send(
-                email,  // From
+                App.GetConfiguration("smtp:email")!,  // From
                 textBoxTo.Text,
                 textBoxSubject.Text,
                 textBoxMessage.Text
             );
+            MessageBox.Show("Надіслано");
+        }
+
+        private void SendButton2_Click(object sender, RoutedEventArgs e)
+        {
+            SmtpClient? smtpClient = GetSmtpClient();
+            if (smtpClient == null) { return; }
+
+            MailMessage mailMessage = new(
+                App.GetConfiguration("smtp:email")!,
+                textBoxTo.Text, 
+                textBoxSubject.Text,
+                textBoxHtml.Text)
+            {
+                IsBodyHtml = true,
+            };
+            smtpClient.Send(mailMessage);
             MessageBox.Show("Надіслано");
         }
     }
