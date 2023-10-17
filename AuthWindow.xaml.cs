@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using System.Data;
 
 namespace NetworkProgrammingP12
 {
@@ -40,7 +41,7 @@ namespace NetworkProgrammingP12
                 $" VALUES (N'{textboxEmail.Text}', N'{textboxPassword.Password}', '{code}')";
             command.ExecuteNonQuery();
 
-            using SmtpClient smtpClient = GetSmtpClient();
+            using SmtpClient? smtpClient = GetSmtpClient();
             smtpClient?.Send(
                 App.GetConfiguration("smtp:email")!,
                 textboxEmail.Text,
@@ -106,5 +107,55 @@ namespace NetworkProgrammingP12
             };
         }
 
+        private void ConfirmButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ConfirmContainer.Tag is String savedCode)
+            {
+                if(textboxCode.Text.Equals(savedCode))
+                {
+                    logBlock.Text += "Email  confirmed\n";
+                    /* Д.З. При правильному вводі коду підтвердження пошти
+                     * виконати SQL запит, який змінить значення ConfirmCode
+                     * на NULL, а також приховає "вікно" введення коду.
+                     * Перевірити, що повторному вході пошта вважається
+                     * підтвердженою
+                     */
+                }
+                else
+                {
+                    logBlock.Text += "Email not confirmed\n";
+                }
+            }
+        }
+
+        private void SigninButton_Click(object sender, RoutedEventArgs e)
+        {
+            using SqlConnection connection = new(ConnectionString);
+            connection.Open();
+            using SqlCommand command = connection.CreateCommand();
+            command.CommandText = "SELECT * FROM [Users] WHERE " +
+                $" [Email]=N'{textboxEmail.Text}' " +
+                $" AND [Password]=N'{textboxPassword.Password}' ";
+            using SqlDataReader reader = command.ExecuteReader();
+            if(reader.Read())  // Користувач знайдений
+            {
+                if( ! reader.IsDBNull("ConfirmCode") )   // код не NULL - не підтверджений
+                {
+                    String code = reader.GetString("ConfirmCode");
+                    ConfirmContainer.Visibility = Visibility.Visible;
+                    ConfirmContainer.Tag = code;
+                    textboxCode.Focus();
+                    logBlock.Text += "Welcome, Email needs confirmation\n";
+                }
+                else
+                {
+                    logBlock.Text += "Welcome, Email confirmed\n";
+                }
+            }
+            else  // Неправильні логін/пароль
+            {
+                MessageBox.Show("Credentials incorrect");
+            }
+        }
     }
 }

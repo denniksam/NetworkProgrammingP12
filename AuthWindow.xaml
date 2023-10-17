@@ -20,6 +20,7 @@
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Label Content="Автентифікація" Grid.ColumnSpan="2" 
@@ -31,8 +32,15 @@
             <Label Content="Password" Grid.Row="2" VerticalAlignment="Center" />
             <PasswordBox x:Name="textboxPassword" Grid.Row="2" Grid.Column="1" 
                      VerticalAlignment="Center" />
-            <Button x:Name="SigninButton" Content="Sign In" Grid.Row="3"/>
-            <Button x:Name="SignupButton" Content="Sign Up" Grid.Row="3" Grid.Column="1" Click="SignupButton_Click"/>
+            <StackPanel Grid.Row="3" Grid.ColumnSpan="2" 
+                        x:Name="ConfirmContainer"
+                        Visibility="Hidden" Orientation="Horizontal">
+                <Label Content="Email code:"/>
+                <TextBox x:Name="textboxCode" MinWidth="50"/>
+                <Button x:Name="ConfirmButton" Content="Enter" Click="ConfirmButton_Click"/>
+            </StackPanel>
+            <Button x:Name="SigninButton" Content="Sign In" Grid.Row="4" Click="SigninButton_Click"/>
+            <Button x:Name="SignupButton" Content="Sign Up" Grid.Row="4" Grid.Column="1" Click="SignupButton_Click"/>
         </Grid>
         <TextBlock x:Name="logBlock" Grid.Column="1"/>
     </Grid>
