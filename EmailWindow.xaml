@@ -20,7 +20,7 @@
 
         <TextBox x:Name="textBoxHtml" 
                  Text="&lt;h2>Добрий день!&lt;/h2> Вас вітає програма &lt;b style='color:tomato'>автоматичного&lt;/b> надсилання листів" 
-                 TextWrapping="Wrap"    />
+                 TextWrapping="Wrap"  />
         <Button x:Name="SendButton2" Content="Надіслати" Margin="20 10" Click="SendButton2_Click"/>
     </StackPanel>
 </Window>

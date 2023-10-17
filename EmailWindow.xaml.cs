@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -112,8 +113,23 @@ namespace NetworkProgrammingP12
             {
                 IsBodyHtml = true,
             };
+            ContentType pngType = new("image/png");
+            mailMessage.Attachments.Add(
+                new Attachment("coin25.png", pngType));
+
+            ContentType mp3Type = new("audio/mpeg");
+            mailMessage.Attachments.Add(
+                new Attachment("Jump_01.mp3", mp3Type));
+
             smtpClient.Send(mailMessage);
             MessageBox.Show("Надіслано");
         }
     }
 }
+/* Д.З. Реалізувати надсилання електронного листа із 
+ * HTML контентом, який включає код підтвердження пошти
+ * (взяти довільний код), а також вкладення файлу
+ * privacy.txt з політикою сайту (взяти довільну)
+ * із зазначенням правильного MIME-типу
+ * ** також додати файл privacy.doc з тим самим вмістом
+ */
