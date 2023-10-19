@@ -45,5 +45,10 @@ namespace NetworkProgrammingP12
         {
             new AuthWindow().ShowDialog();
         }
+
+        private void HttpButton_Click(object sender, RoutedEventArgs e)
+        {
+            new HttpWindow().ShowDialog();
+        }
     }
 }
