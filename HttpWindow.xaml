@@ -8,7 +8,14 @@
         Title="HttpWindow" Height="450" Width="300">
     <StackPanel Orientation="Vertical">
         <Button x:Name="get1Button"
+                Margin="10 5"
                 Content="GET" Click="get1Button_Click"/>
+        <Button x:Name="ratesButton"
+                Margin="10 5"
+                Content="Rates" Click="ratesButton_Click"/>
+        <Button x:Name="popularButton"
+                Margin="10 5"
+                Content="EUR USD XAU" Click="popularButton_Click"/>
         <TextBlock x:Name="textBlock1"
                    FontFamily="Courier New"/>
     </StackPanel>

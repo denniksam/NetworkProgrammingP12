@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,7 +21,10 @@ namespace NetworkProgrammingP12
     /// </summary>
     public partial class HttpWindow : Window
     {
-        public HttpWindow()
+        private List<NbuRate>? rates;
+        private String[] popularCc = { "XAU", "USD", "EUR" };
+
+    public HttpWindow()
         {
             InitializeComponent();
         }
@@ -48,7 +52,70 @@ namespace NetworkProgrammingP12
              * Додати скріншоти
              */
         }
+
+        private async void ratesButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (rates == null)
+            {
+                await loadRatesAsync();
+            }
+            if (rates == null)
+            {
+                return;
+            }
+            foreach (var rate in rates)
+            {
+                textBlock1.Text += $"{rate.cc} {rate.txt} {rate.rate}\n";
+            }
+        }
+        private async Task loadRatesAsync()
+        {
+            using HttpClient httpClient = new();
+            String body = await httpClient.GetStringAsync(@"https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json");
+            // ORM (у даному контексті) - переведення String body в об'єкти
+            rates = JsonSerializer.Deserialize<List<NbuRate>>(body);
+            if (rates == null)
+            {
+                MessageBox.Show("Error deserializing");
+                return;
+            }
+        }
+
+        private async void popularButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (rates == null)
+            {
+                await loadRatesAsync();
+            }
+            if (rates == null)
+            {
+                return;
+            }
+            foreach (var rate in rates)
+            {                
+                if(popularCc.Contains(rate.cc))
+                {
+                    textBlock1.Text += $"{rate.cc} {rate.txt} {rate.rate}\n";
+                }                
+            }
+        }
     }
+
+    class NbuRate
+    {
+        public int r030 { get; set; }
+        public String txt { get; set; }
+        public double rate { get; set; }
+        public String cc { get; set; }
+        public String exchangedate { get; set; }
+    }
+
+
+
+
+
+
+
 
     public static class EllipsisExtensions
     {

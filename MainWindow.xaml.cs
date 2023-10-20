@@ -50,5 +50,10 @@ namespace NetworkProgrammingP12
         {
             new HttpWindow().ShowDialog();
         }
+
+        private void CryptoButton_Click(object sender, RoutedEventArgs e)
+        {
+            new CryptoWindow().ShowDialog();
+        }
     }
 }

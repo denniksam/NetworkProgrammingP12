@@ -42,5 +42,11 @@
                 Margin="20 15"
                 Padding="0 4 0 7"
                 Click="HttpButton_Click"/>
+        
+        <Button x:Name="CryptoButton" 
+                Content="Crypto Graph"
+                Margin="20 15"
+                Padding="0 4 0 7"
+                Click="CryptoButton_Click"/>
     </StackPanel>
 </Window>
