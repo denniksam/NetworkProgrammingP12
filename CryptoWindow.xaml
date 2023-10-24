@@ -28,6 +28,12 @@
                     <Label Content="{Binding Path=name}"/>
                 </DataTemplate>
             </ListView.ItemTemplate>
+            <ListView.Resources>
+                <Style TargetType="ListViewItem">
+                    <EventSetter Event="MouseDoubleClick" 
+                                 Handler="FrameworkElement_MouseLeftButtonDown"/>
+                </Style>
+            </ListView.Resources>
         </ListView>
         
         <Canvas Grid.Row="1" Grid.Column="1"/>

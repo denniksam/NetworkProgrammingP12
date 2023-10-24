@@ -58,7 +58,24 @@ namespace NetworkProgrammingP12
             }
 
         }
+
+        private void FrameworkElement_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if(sender is ListViewItem item)
+            {
+                if(item.Content is CoinData coinData)
+                {
+                    MessageBox.Show(coinData.symbol);
+                }
+                item.Background = Brushes.Aqua;
+            }
+        }
     }
+    /* Д.З. Реалізувати "перенесення" виділення елемента списку:
+     * при виділенні іншого елемента знімати виділення з попереднього.
+     * Видати повідомлення (MessageBox) про id ассета, що виділяється.
+     * Повторити роботу з WPF Canvas (принаймні рисування ліній)
+     */
 
     ///////////////// ORM ////////////////////////
     public class CoincapResponse
